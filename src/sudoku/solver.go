@@ -1,135 +1,148 @@
-package main
+package sudoku
 
 import (
-	"fmt"
-	"mapping"
 	"buffer"
-	"decorator"	
+	"fmt"
+	"math"
+	"sort"
 )
 
-func main() {
-	emptyBoard:= [9][9]int8{
-		{0,0,0,6,0,8,9,1,0},
-		{0,9,0,4,3,2,6,8,7},
-		{0,6,3,9,0,0,2,0,4},
-		{9,0,0,3,0,4,0,0,2},
-		{3,1,0,0,0,0,0,7,9},
-		{0,7,0,0,0,9,5,0,0},
-		{0,0,1,0,9,6,3,0,0},
-		{0,0,0,0,0,1,0,2,0},
-		{0,0,6,7,4,0,0,8,1}}
+// Private
+var originalBoard [9][9]int8
+var maxCyclesPerRow = 500
+var cycles = 0
+var Board [9][9]int8
+var TmpBuffer = buffer.New()
 
-	board := mapping.MapAsFlatList(emptyBoard)	
-	loopGlobal := 0
-	loopRow := 0
-	maxPerRow := 10
-
-	
-
-	originalBoard := board
-	tmpBuffer := buffer.New()
-
-	for i:=0; i<81; i++ {
-		if board[i] != 0 {
-			continue			
-		}
-
-		tmpBuffer.Fill()
-		rowNumber := i / 9		
-		colNumber := i % 9
-		EliminateHorizontalNumbers(rowNumber, board, &tmpBuffer)						
-		EliminateVerticalNumbers(colNumber, board, &tmpBuffer)	
-		EliminateSquareNumbers(rowNumber, colNumber, board, &tmpBuffer)	
-
-		result := tmpBuffer.GetRandomAvaiableNumber()
-		
-		if result == 0 {
-			loopRow++
-			loopGlobal++
-						
-			fmt.Println("Powrot: ", loopRow, loopGlobal, i)
-			fmt.Println()
-
-			decorator.Print(board)
-			
-
-			//return for row
-			indexMin := rowNumber * 9
-			CopyValuesFromIndex(indexMin, board, originalBoard)
-
-			//return for row -1
-			if loopRow == maxPerRow {
-				loopRow = 0
-				indexMin := (rowNumber) * 9	
-				CopyValuesFromIndex(indexMin, board, originalBoard)
-			}
-			
-			i = indexMin-1
-
-			fmt.Println("Powrot na i: ", i)
-
-			//fmt.Println()
-			//decorator.Print(board)
-			continue
-		}else{
-			board[i] = result			
-		}			
-	}		
-
-	decorator.Print(board)
+type CellData struct {
+	X, Y, ChosenNumber int8
+	AvaiableNumbers    []int8
 }
 
-func CopyValuesFromIndex(index int, board [81]int8, originalBoard [81]int8) {	
-	for i:=0; i<9; i++ {
-		board[index + i] = originalBoard[index + i]		
+type CellCollection []CellData
+
+var cellCollection CellCollection
+var history CellCollection
+
+func (a CellCollection) Len() int { return len(a) }
+func (a CellCollection) Less(i, j int) bool {
+	return len(a[i].AvaiableNumbers) < len(a[j].AvaiableNumbers)
+}
+func (a CellCollection) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+
+func (collection CellCollection) HasCertainties() bool {
+	for _, cell := range collection {
+		if len(cell.AvaiableNumbers) == 1 {
+			return true
+		}
 	}
 
-	fmt.Println("Index: ", index)
-	fmt.Println(originalBoard)
-	fmt.Println(board)
+	return false
+}
+
+func New(boardToSolved [9][9]int8) {
+	Board = boardToSolved
+	originalBoard = boardToSolved
+}
+
+func Solve() [9][9]int8 {
+	i := 0
+	needWork := true
+	for needWork {
+		buildPossibilities()
+		fillCertainties()
+
+		if !cellCollection.HasCertainties() {
+			needWork = false
+		}
+
+		/*
+			buildPossibilities()
+			fillBoard()
+
+			needWork = false
+			return Board
+
+			if isEmpty() {
+				fmt.Println(history)
+				fmt.Println(i)
+				return Board
+				needWork = false
+			}*/
+		/*
+			if cellCollection.HasCertainties() {
+				fillBoard()
+			} else {
+				fmt.Println(i)
+				return Board
+				needWork = false
+			}
+		*/
+		i++
+	}
+
+	fmt.Println(i, cellCollection)
+	return Board
 
 }
 
-func EliminateHorizontalNumbers(rowNumber int, board [81]int8, tmpBuffer *buffer.Buffer) {
-	index := rowNumber * 9
-
-	tmpBuffer.UseNumber(board[index + 0])
-	tmpBuffer.UseNumber(board[index + 1])
-	tmpBuffer.UseNumber(board[index + 2])
-	tmpBuffer.UseNumber(board[index + 3])
-	tmpBuffer.UseNumber(board[index + 4])
-	tmpBuffer.UseNumber(board[index + 5])
-	tmpBuffer.UseNumber(board[index + 6])
-	tmpBuffer.UseNumber(board[index + 7])
-	tmpBuffer.UseNumber(board[index + 8])
+func fillCertainties() {
+	for _, ceilData := range cellCollection {
+		if len(ceilData.AvaiableNumbers) == 1 {
+			ceilData.ChosenNumber = ceilData.AvaiableNumbers[0]
+			Board[ceilData.Y][ceilData.X] = ceilData.ChosenNumber
+		}
+	}
 }
 
-func EliminateVerticalNumbers(colNumber int, board [81]int8, tmpBuffer *buffer.Buffer) {
-	tmpBuffer.UseNumber(board[colNumber + 0 * 9])
-	tmpBuffer.UseNumber(board[colNumber + 1 * 9])
-	tmpBuffer.UseNumber(board[colNumber + 2 * 9])
-	tmpBuffer.UseNumber(board[colNumber + 3 * 9])
-	tmpBuffer.UseNumber(board[colNumber + 4 * 9])
-	tmpBuffer.UseNumber(board[colNumber + 5 * 9])
-	tmpBuffer.UseNumber(board[colNumber + 6 * 9])
-	tmpBuffer.UseNumber(board[colNumber + 7 * 9])
-	tmpBuffer.UseNumber(board[colNumber + 8 * 9])	
+func isEmpty() bool {
+	for y := 0; y < 9; y++ {
+		for x := 0; x < 9; x++ {
+			if Board[x][y] == 0 {
+				return false
+			}
+		}
+	}
+
+	return true
 }
 
-func EliminateSquareNumbers(rowNumber int, colNumber int, board [81]int8, tmpBuffer *buffer.Buffer) {
-	squareRowNr := rowNumber % 3
-	squareColNr := colNumber % 3
-	position := squareColNr * 27 + squareRowNr * 3
-	
-	tmpBuffer.UseNumber(board[position + 0])
-	tmpBuffer.UseNumber(board[position + 1])	
-	tmpBuffer.UseNumber(board[position + 2])	
-	
-	tmpBuffer.UseNumber(board[position + 9])	
-	tmpBuffer.UseNumber(board[position + 10])	
-	tmpBuffer.UseNumber(board[position + 11])	
-	
-	tmpBuffer.UseNumber(board[position + 18])	
-	tmpBuffer.UseNumber(board[position + 19])	
-	tmpBuffer.UseNumber(board[position + 20])	
+func buildPossibilities() [9][9]int8 {
+	cellCollection = CellCollection{}
+	for y := 0; y < 9; y++ {
+		for x := 0; x < 9; x++ {
+			if Board[y][x] == 0 {
+				EliminateNumbers(int8(x), int8(y))
+				ceilData := CellData{int8(x), int8(y), 0, TmpBuffer.GetAvaiableNumbers()}
+				cellCollection = append(cellCollection, ceilData)
+			}
+		}
+	}
+
+	// Sort results
+	sort.Sort(CellCollection(cellCollection))
+
+	return Board
+}
+
+func EliminateNumbers(x int8, y int8) {
+	TmpBuffer.Fill()
+
+	for i := 0; i < 9; i++ {
+		// Row
+		TmpBuffer.UseNumber(Board[y][i])
+		// Col
+		TmpBuffer.UseNumber(Board[i][x])
+	}
+
+	// Square
+	fromX := int8((math.Floor(float64(x / 3))) * 3)
+	fromY := int8((math.Floor(float64(y / 3))) * 3)
+	for i := 0; i < 3; i++ {
+		for j := 0; j < 3; j++ {
+			y := fromY + int8(i)
+			x := fromX + int8(j)
+			TmpBuffer.UseNumber(Board[y][x])
+		}
+	}
 }

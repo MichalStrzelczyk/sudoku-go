@@ -10,7 +10,7 @@ type Buffer struct {
 }
 
 /* Public methods */
-func New() Buffer {	
+func New() Buffer {
 	var bufTmp = Buffer{}
 	bufTmp.Fill()
 
@@ -19,15 +19,15 @@ func New() Buffer {
 
 /* Object methods s*/
 func (buffer *Buffer) Clear() {
-	buffer.List = [9]int8{0,0,0,0,0,0,0,0,0}	
+	buffer.List = [9]int8{0, 0, 0, 0, 0, 0, 0, 0, 0}
 }
-		
+
 func (buffer *Buffer) Fill() {
-	buffer.List = [9]int8{1,2,3,4,5,6,7,8,9}		
+	buffer.List = [9]int8{1, 2, 3, 4, 5, 6, 7, 8, 9}
 }
 
 func (buffer *Buffer) IsEmpty() bool {
-	for i:=0; i<9; i++ {
+	for i := 0; i < 9; i++ {
 		if buffer.List[i] != 0 {
 			return false
 		}
@@ -36,22 +36,36 @@ func (buffer *Buffer) IsEmpty() bool {
 	return true
 }
 
+func (buffer *Buffer) IsOnlyOnePossibility() bool {
+	var cnt = 0
+	for i := 0; i < 9; i++ {
+		if buffer.List[i] != 0 {
+			cnt++
+		}
+	}
+
+	return cnt == 1
+}
+
 func (buffer *Buffer) UseNumber(number int8) {
 	if number >= 1 && number <= 9 {
 		buffer.List[number-1] = 0
-	}	
+	}
 }
 
-
-func (buffer *Buffer) GetRandomAvaiableNumber() int8 {
+func (buffer *Buffer) GetAvaiableNumbers() []int8 {
 	var tmpBuffer []int8
-	for i:=0; i<9; i++ {
+	for i := 0; i < 9; i++ {
 		if buffer.List[i] != 0 {
 			tmpBuffer = append(tmpBuffer, buffer.List[i])
 		}
 	}
-	
-	return GetRandomValueFromList(tmpBuffer)
+
+	return tmpBuffer
+}
+
+func (buffer *Buffer) GetRandomAvaiableNumber() int8 {
+	return GetRandomValueFromList(buffer.GetAvaiableNumbers())
 }
 
 func GetRandomValueFromList(list []int8) int8 {
@@ -64,18 +78,3 @@ func GetRandomValueFromList(list []int8) int8 {
 
 	return list[index]
 }
-
-/*
-
-func GetCommonNumbers(buffer1 Buffer, buffer2 Buffer, buffer3 Buffer) []int8 {
-	var tmpBuffer []int8
-	for i:=0; i<9; i++ {
-		if buffer1.list[i] != 0 && buffer2.list[i] != 0 && buffer3.list[i] != 0 {			
-			tmpBuffer = append(tmpBuffer, buffer1.list[i])
-		}
-	}
-
-	return tmpBuffer
-}
-
-*/

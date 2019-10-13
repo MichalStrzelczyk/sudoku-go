@@ -4,16 +4,14 @@ import (
 	"fmt"
 )
 
-func Print(matrix [81]int8) {
-	fmt.Println(matrix[0:8])		
-	fmt.Println(matrix[0+1*9:8+1*9])		
-	fmt.Println(matrix[0+2*9:8+2*9])		
-
-	fmt.Println(matrix[0+3*9:8+3*9])		
-	fmt.Println(matrix[0+4*9:8+4*9])		
-	fmt.Println(matrix[0+5*9:8+5*9])		
-
-	fmt.Println(matrix[0+6*9:8+6*9])		
-	fmt.Println(matrix[0+7*9:8+7*9])		
-	fmt.Println(matrix[0+8*9:8+8*9])		
+func Print(matrix [9][9]int8) {
+	fmt.Println(matrix[0])		
+	fmt.Println(matrix[1])		
+	fmt.Println(matrix[2])		
+	fmt.Println(matrix[3])		
+	fmt.Println(matrix[4])		
+	fmt.Println(matrix[5])		
+	fmt.Println(matrix[6])		
+	fmt.Println(matrix[7])		
+	fmt.Println(matrix[8])		
 }

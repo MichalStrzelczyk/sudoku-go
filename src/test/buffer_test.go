@@ -62,7 +62,7 @@ func TestUseNumber(t *testing.T) {
 func TestGetRandomAvaiableNumberScenario1(t *testing.T) {
 	buffer := buffer.New()
 	
-	buffer.UseNumber(1)Available
+	buffer.UseNumber(1)
 	buffer.UseNumber(2)
 	buffer.UseNumber(3)
 	buffer.UseNumber(4)
