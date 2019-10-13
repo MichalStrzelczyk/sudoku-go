@@ -1,12 +1,12 @@
 # SUDOKU SOLVER
 
 ## Solve Sudoku 
-`
+```
     go run solver.go
-`
+```
 
 ### Result
-`
+```
 [4 5 1 6 9 7 2 3 8]
 [6 7 9 2 8 3 1 5 4]
 [2 8 3 4 5 1 6 7 9]
@@ -18,13 +18,13 @@
 [7 4 2 8 6 5 9 1 3]
 
 Solved in 0.000221 sek
-`
+```
 ## Generate new board
-`
+```
     go run generator.go
-`
+```
 ### Result
-`
+```
 [3 5 2 7 9 1 8 4 6]
 [7 6 8 3 4 5 1 9 2]
 [4 9 1 8 6 2 5 7 3]
@@ -36,4 +36,4 @@ Solved in 0.000221 sek
 [5 2 7 1 8 6 4 3 9]
 
 Solved in 0.004978 sek
-`
+```
