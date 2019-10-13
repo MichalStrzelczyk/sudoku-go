@@ -2,18 +2,11 @@ package sudoku
 
 import (
 	"buffer"
-	"fmt"
 	"math"
 	"sort"
 )
 
-// Private
-var originalBoard [9][9]int8
-var maxCyclesPerRow = 500
-var cycles = 0
-var Board [9][9]int8
-var TmpBuffer = buffer.New()
-
+// Types
 type CellData struct {
 	X, Y, ChosenNumber int8
 	AvaiableNumbers    []int8
@@ -21,14 +14,27 @@ type CellData struct {
 
 type CellCollection []CellData
 
+// Private properties
+var originalBoard [9][9]int8
 var cellCollection CellCollection
 var history CellCollection
 
-func (a CellCollection) Len() int { return len(a) }
+// Public properties
+var Board [9][9]int8
+var TmpBuffer = buffer.New()
+
+// Function for sorting
+func (a CellCollection) Len() int {
+	return len(a)
+}
+
 func (a CellCollection) Less(i, j int) bool {
 	return len(a[i].AvaiableNumbers) < len(a[j].AvaiableNumbers)
 }
-func (a CellCollection) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+
+func (a CellCollection) Swap(i, j int) {
+	a[i], a[j] = a[j], a[i]
+}
 
 func (collection CellCollection) HasCertainties() bool {
 	for _, cell := range collection {
@@ -40,50 +46,42 @@ func (collection CellCollection) HasCertainties() bool {
 	return false
 }
 
+// Constructor
 func New(boardToSolved [9][9]int8) {
 	Board = boardToSolved
 	originalBoard = boardToSolved
 }
 
+// Main function
 func Solve() [9][9]int8 {
-	i := 0
 	needWork := true
 	for needWork {
 		buildPossibilities()
 		fillCertainties()
 
 		if !cellCollection.HasCertainties() {
-			needWork = false
-		}
-
-		/*
-			buildPossibilities()
-			fillBoard()
-
-			needWork = false
-			return Board
-
+			fillCeil()
 			if isEmpty() {
-				fmt.Println(history)
-				fmt.Println(i)
-				return Board
-				needWork = false
-			}*/
-		/*
-			if cellCollection.HasCertainties() {
-				fillBoard()
-			} else {
-				fmt.Println(i)
-				return Board
 				needWork = false
 			}
-		*/
-		i++
+		}
 	}
 
-	fmt.Println(i, cellCollection)
 	return Board
+}
 
+func fillCeil() {
+	if len(cellCollection) > 0 {
+
+		if len(cellCollection[0].AvaiableNumbers) == 0 {
+			Board = originalBoard
+			return
+		}
+
+		cellCollection[0].ChosenNumber = buffer.GetRandomValueFromList(cellCollection[0].AvaiableNumbers)
+		Board[cellCollection[0].Y][cellCollection[0].X] = cellCollection[0].ChosenNumber
+		history = append(history, cellCollection[0])
+	}
 }
 
 func fillCertainties() {
@@ -112,7 +110,7 @@ func buildPossibilities() [9][9]int8 {
 	for y := 0; y < 9; y++ {
 		for x := 0; x < 9; x++ {
 			if Board[y][x] == 0 {
-				EliminateNumbers(int8(x), int8(y))
+				eliminateNumbers(int8(x), int8(y))
 				ceilData := CellData{int8(x), int8(y), 0, TmpBuffer.GetAvaiableNumbers()}
 				cellCollection = append(cellCollection, ceilData)
 			}
@@ -125,7 +123,7 @@ func buildPossibilities() [9][9]int8 {
 	return Board
 }
 
-func EliminateNumbers(x int8, y int8) {
+func eliminateNumbers(x int8, y int8) {
 	TmpBuffer.Fill()
 
 	for i := 0; i < 9; i++ {
