@@ -17,7 +17,7 @@
 [1 9 6 3 7 4 8 2 5]
 [7 4 2 8 6 5 9 1 3]
 
-Solved in 0.000221 sek
+Solved in 0.000221 sec
 ```
 ## Generate new board
 ```
@@ -35,5 +35,5 @@ Solved in 0.000221 sek
 [1 8 9 4 2 3 6 5 7]
 [5 2 7 1 8 6 4 3 9]
 
-Solved in 0.004978 sek
+Solved in 0.004978 sec
 ```
